@@ -1,6 +1,6 @@
 {
-  "short_name": "table-data",
-  "name": "table-data",
+  "short_name": "gl-table-data",
+  "name": "gl-table-data",
   "start_url": "./index.html",
   "display": "standalone",
   "theme_color": "#000000",
