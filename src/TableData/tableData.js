@@ -22,7 +22,8 @@ class TableData extends Component {
       sortColumn: false,
       selectedPage: 0,
       itemsPerPage: 7,
-      noPagination: false
+      noPagination: false,
+      renderChildren: -1
     };
 
     this.renderTable = this.renderTable.bind(this);
@@ -53,7 +54,7 @@ class TableData extends Component {
 
   renderTable () {
     const {keyList, tableColumnData} = this.props;
-    const {itemsPerPage} = this.state;
+    const {itemsPerPage, renderChildren} = this.state;
     const tableItemsList = this.state.paginatedList;
     if (tableItemsList && tableItemsList.length) {
       let renderItems = [];
@@ -70,24 +71,40 @@ class TableData extends Component {
           renderItems.push(
             <div className={`row border-bottom pb-2 pt-2 padding-margin ${index % 2 === 0 ? 'bg-light' : 'bg-white'}`}
               key={`${index}${TEXT_COLUMN_TRANSFORMATION_FUNCTION}`}
-              onClick={() => this.tableRowClickAction(tableItem)} style={{cursor: 'pointer', alignItems: 'center'}}>
+              onClick={
+                () => {
+                  this.tableRowClickAction(tableItem);
+                  if (renderChildren === index) {
+                    this.setState({renderChildren: -1});
+                  } else {
+                    this.setState({renderChildren: index});
+                  }
+                }
+              } style={{cursor: 'pointer', alignItems: 'center'}}>
               {
                 keyList.map(columnName => {
-                  let transformation = (input) => { return input; };
-                  if (_.get(tableColumnData, columnName + TEXT_COLUMN_TRANSFORMATION_FUNCTION)) {
+                  let transformation = (input, renderLabel) => { renderLabel(input); return input; };
+                  if (_.get(tableColumnData, columnName + TEXT_COLUMN_TRANSFORMATION_FUNCTION, false)) {
+                    console.log('PRINT CONTENT setting custom print function', columnName);
                     transformation = _.get(tableColumnData, columnName + TEXT_COLUMN_TRANSFORMATION_FUNCTION, (param) => { return param; });
+                  } else {
+                    console.log('PRINT CONTENT DEFAULT PRINT', columnName);
                   }
                   const externalStyle = _.get(tableColumnData, columnName + TEXT_COLUMN_STYLE, {});
                   const style = {whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', ...externalStyle};
                   let columnWidth = _.get(tableColumnData, columnName + TABLE_COLUMN_WIDTH) ? `-${_.get(tableColumnData, columnName + TABLE_COLUMN_WIDTH)}` : '';
+                  let displayLabel = '';
+                  const content = transformation(_.get(tableItem, columnName), (string) => { displayLabel = string; });
+                  console.log('PRINT CONTENT after transformation', content);
                   return (
                     <div className={`col-lg${_.get(tableColumnData, columnName) === INDEX ? '-1' : columnWidth}`}
-                      style={style} key={`${index}_${columnName}`} title={_.get(tableItem, columnName)}>
-                      {transformation(_.get(tableItem, columnName))}
+                      style={style} key={`${index}_${columnName}`} title={displayLabel}>
+                      {content}
                     </div>
                   );
                 })
               }
+              {renderChildren === index ? this.props.children : ''}
             </div>
           );
         }
@@ -141,17 +158,18 @@ class TableData extends Component {
     if ((this.state.selectedPage !== selectedPage) || forceUpdate) {
       this.setState({
         paginatedList: vehiclesPaginated,
-        selectedPage: selectedPage
+        selectedPage: selectedPage,
+        renderChildren: -1
       });
     }
   }
 
   /** tableColumnData structure:
-    {
-      fieldName: Display name for column
-      fieldValue: column value name
-      fieldName_table_column_render_func: function for custom column rendering - not required
-    }
+   {
+     fieldName: Display name for column
+     fieldValue: column value name
+     fieldName_table_column_render_func: function for custom column rendering - not required
+   }
    */
   render () {
     const {tableItemsList, tableColumnData, keyList, noHeader} = this.props;
@@ -198,7 +216,8 @@ TableData.propTypes = {
   tableColumnData: PropTypes.object.isRequired, // Column name/value pairs { table_item: 'Table item name', second_column: 'Second column formatted' }
   keyList: PropTypes.array.isRequired, // sorted list of table column keys
   numberOfRows: PropTypes.number,
-  noHeader: PropTypes.boolean
+  noHeader: PropTypes.boolean,
+  children: PropTypes.element
 };
 
 export default TableData;
