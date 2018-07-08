@@ -70,34 +70,31 @@ class TableData extends Component {
         } else {
           renderItems.push(
             <div className={`row border-bottom pb-2 pt-2 padding-margin ${index % 2 === 0 ? 'bg-light' : 'bg-white'}`}
-              key={`${index}${TEXT_COLUMN_TRANSFORMATION_FUNCTION}`}
-              onClick={
-                () => {
-                  this.tableRowClickAction(tableItem);
-                  if (renderChildren === index) {
-                    this.setState({renderChildren: -1});
-                  } else {
-                    this.setState({renderChildren: index});
-                  }
-                }
-              } style={{cursor: 'pointer', alignItems: 'center'}}>
+              key={`${index}${TEXT_COLUMN_TRANSFORMATION_FUNCTION}`} style={{cursor: 'pointer', alignItems: 'center'}}>
               {
                 keyList.map(columnName => {
                   let transformation = (input, renderLabel) => { renderLabel(input); return input; };
                   if (_.get(tableColumnData, columnName + TEXT_COLUMN_TRANSFORMATION_FUNCTION, false)) {
-                    console.log('PRINT CONTENT setting custom print function', columnName);
                     transformation = _.get(tableColumnData, columnName + TEXT_COLUMN_TRANSFORMATION_FUNCTION, (param) => { return param; });
-                  } else {
-                    console.log('PRINT CONTENT DEFAULT PRINT', columnName);
                   }
                   const externalStyle = _.get(tableColumnData, columnName + TEXT_COLUMN_STYLE, {});
                   const style = {whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', ...externalStyle};
                   let columnWidth = _.get(tableColumnData, columnName + TABLE_COLUMN_WIDTH) ? `-${_.get(tableColumnData, columnName + TABLE_COLUMN_WIDTH)}` : '';
                   let displayLabel = '';
                   const content = transformation(_.get(tableItem, columnName), (string) => { displayLabel = string; });
-                  console.log('PRINT CONTENT after transformation', content);
                   return (
-                    <div className={`col-lg${_.get(tableColumnData, columnName) === INDEX ? '-1' : columnWidth}`}
+                    <div
+                      onClick={
+                        () => {
+                          this.tableRowClickAction(tableItem);
+                          if (renderChildren === index) {
+                            this.setState({renderChildren: -1});
+                          } else {
+                            this.setState({renderChildren: index});
+                          }
+                        }
+                      }
+                      className={`col-lg${_.get(tableColumnData, columnName) === INDEX ? '-1' : columnWidth}`}
                       style={style} key={`${index}_${columnName}`} title={displayLabel}>
                       {content}
                     </div>
